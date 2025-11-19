@@ -67,12 +67,13 @@ const mooney_trial_template = {
             trial_duration: 20000, 
             data: { task_part: 'Image_Recognition', stimulus_filename: jsPsych.timelineVariable('stimulus') },
             on_finish: function(data) {
+                // Record if ENTER was pressed (if response is null, it was a timeout/no press)
                 data.recognized = data.response !== null;
                 jsPsych.data.get().addToLast({ image_recognized: data.recognized });
             }
         },
         
-        // C. CATEGORY RESPONSE (5 seconds max)
+        // C. CATEGORY RESPONSE (5 seconds max) - NOW ALWAYS RUNS
         {
             type: jsPsychHtmlKeyboardResponse,
             stimulus: function(){
@@ -82,12 +83,14 @@ const mooney_trial_template = {
             trial_duration: 5000, 
             data: { task_part: 'Category_Choice', correct_response: jsPsych.timelineVariable('correct_category_key') },
             on_finish: function(data) {
+                // Check if they answered at all (response !== null)
+                data.answered_A = data.response !== null;
                 data.correct_A = jsPsych.pluginAPI.compareKeys(data.response, data.correct_response);
                 jsPsych.data.get().addToLast({ category_correct: data.correct_A });
             }
         },
         
-        // D. OBJECT RESPONSE (5 seconds max)
+        // D. OBJECT RESPONSE (5 seconds max) - NOW ALWAYS RUNS
         {
             type: jsPsychHtmlKeyboardResponse,
             stimulus: function(){
@@ -96,14 +99,14 @@ const mooney_trial_template = {
             choices: ['1', '2', '3', '4', '5'],
             trial_duration: 5000, 
             data: { task_part: 'Object_Choice', correct_response: jsPsych.timelineVariable('correct_object_key') },
-            conditional_function: function() {
-                // Only run this if they responded to the category choice (C)
-                const prev_data = jsPsych.data.get().last(1).values[0];
-                return prev_data.response !== null; 
-            },
+            // Removed the complex conditional_function to ensure this trial always runs
+            
             on_finish: function(data) {
-                // Scoring happens here: only score if object response is correct AND category was answered
+                // Check if they answered at all (response !== null)
+                data.answered_B = data.response !== null;
                 data.correct_B = jsPsych.pluginAPI.compareKeys(data.response, data.correct_response);
+                
+                // Score only if the object response was correct.
                 if (data.correct_B) { current_score++; }
             }
         }
@@ -133,11 +136,11 @@ jsPsych.onFinish(function() {
     // 1. CAPTURE THE RESPONSE ID PASSED FROM QUALTRICS
     const response_id = getParameterByName('participant'); 
     
-    // 2. QUALTRICS RETURN URL (Now set to your Duke survey link)
+    // 2. QUALTRICS RETURN URL (Set to your Duke survey link)
     const base_return_url = 'https://duke.qualtrics.com/jfe/form/SV_3CRfinpvLk65sBU'; 
 
     // 3. CONSTRUCT THE REDIRECTION TARGET
-    // We pass BOTH the score AND the ResponseID back to Qualtrics.
+    // We pass BOTH the score and the ResponseID back to Qualtrics.
     const redirection_target = base_return_url + 
                                '?score=' + final_percent + 
                                '&responseID=' + response_id; 
