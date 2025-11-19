@@ -5,7 +5,7 @@
 // Initialize jsPsych, setting the display element ID defined in index.html
 const jsPsych = initJsPsych({ display_element: 'jspsych-display' });
 
-// IMPORTANT: This path now points to your hosted GitHub image folder, ensuring images load online.
+// This path points to your hosted GitHub image folder, ensuring images load online.
 const IMAGE_BASE_URL = 'images/'; 
 let current_score = 0; 
 const total_trials = 8;
@@ -133,9 +133,8 @@ jsPsych.onFinish(function() {
     // 1. CAPTURE THE RESPONSE ID PASSED FROM QUALTRICS
     const response_id = getParameterByName('participant'); 
     
-    // 2. PASTE YOUR CLEANED QUALTRICS RETURN URL HERE
-    ********** // !!! CRITICAL: REPLACE THIS ENTIRE STRING WITH YOUR CLEAN QUALTRICS LINK !!! *************
-    const base_return_url = 'https://YOUR-QUALTRICS-INSTITUTION.qualtrics.com/jfe/form/SV_XXXXXXX'; 
+    // 2. QUALTRICS RETURN URL (Now set to your Duke survey link)
+    const base_return_url = 'https://duke.qualtrics.com/jfe/form/SV_3CRfinpvLk65sBU'; 
 
     // 3. CONSTRUCT THE REDIRECTION TARGET
     // We pass BOTH the score AND the ResponseID back to Qualtrics.
