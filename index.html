@@ -1,262 +1,35 @@
 <!DOCTYPE html>
 <html>
 <head>
-    <title>Mooney Object Recognition Screening</title>
+    <meta charset="utf-8">
+    <title>Mooney Image Recognition Task</title>
     
-    <link href="jspsych/jspsych.css" rel="stylesheet" type="text/css" />
-
-    <script src="jspsych/jspsych.js"></script> 
-    
-    <script src="jspsych/plugin-image-keyboard-response.js"></script>
-    <script src="jspsych/plugin-html-keyboard-response.js"></script>
+    <link href="https://catherinesaunders.github.io/moodle-screening/jspsych/jspsych.css" rel="stylesheet" type="text/css" />
     
     <style>
-        body {
-            background-color: black;
-            color: white;
-            font-family: Arial, sans-serif;
-            text-align: center;
-        }
-        /* Ensure the stimulus text is large and clear */
-        .jspsych-content {
-            font-size: 24px;
-        }
-        .stimulus-text-container {
-            /* Mimics the pre-line formatting for list alignment */
-            white-space: pre-line; 
-            text-align: left; 
-            margin: 0 auto; 
-            width: 50%; /* Adjust width if needed for your screen size */
-        }
+        /* 1. INCREASED FONT SIZE AND HEADINGS */
+        .jspsych-content { font-size: 32px !important; color: white; }
+        .jspsych-content p { font-size: 32px !important; }
+        .jspsych-content h2 { font-size: 48px !important; }
+
+        /* 2. INCREASED IMAGE DISPLAY SIZE */
+        img { max-width: 80vw !important; max-height: 60vh !important; display: block !important; margin: 0 auto !important; }
+
+        /* 3. BASE STYLES for Black Background and Centering */
+        body { background-color: black !important; color: white; font-family: Arial, sans-serif; text-align: center; margin: 0 !important; height: 100vh !important; width: 100vw !important; overflow: hidden !important; }
+        #jspsych-display { position: fixed !important; top: 50% !important; left: 50% !important; transform: translate(-50%, -50%) !important; width: 100% !important; height: 100% !important; z-index: 9999; background-color: black !important; }
+        .stimulus-text-container { white-space: pre-line; text-align: left; margin: 0 auto; width: 60%; }
     </style>
 </head>
 <body>
     <div id="jspsych-display"></div>
-    
-    <script>
-        // JSPSYCH EXPERIMENT LOGIC STARTS HERE
-        const jsPsych = initJsPsych({
-            display_element: 'jspsych-display'
-        });
 
-        // -----------------------------------------------------------
-        // 1. STIMULI AND VARIABLE DEFINITIONS
-        // -----------------------------------------------------------
+    <script src="https://catherinesaunders.github.io/moodle-screening/jspsych/jspsych.js"></script>
 
-        let current_score = 0; // Tracks the total correct object identifications (cor_countB)
-        const total_trials = 8;
-        const cutoff_score = 0.4; 
+    <script src="https://catherinesaunders.github.io/moodle-screening/jspsych/plugin-preload.js"></script>
+    <script src="https://catherinesaunders.github.io/moodle-screening/jspsych/plugin-html-keyboard-response.js"></script>
+    <script src="https://catherinesaunders.github.io/moodle-screening/jspsych/plugin-image-keyboard-response.js"></script>
 
-        // The image paths reference the 'images/' folder. CHECK FILENAMES CAREFULLY.
-        const all_stimuli = [
-            // Uebungsdurchlauf 1 (Cougar / Bee)
-            { 
-                stimulus: 'images/A_cougar_sigma_3.jpg', 
-                correct_category_key: '1', 
-                correct_object_key: '3',    
-                category_choices: '1) mammal\n2) insect\n3) reptile\n4) household item\n5) bird',
-                object_choices: '1) bunny\n2) rat\n3) cougar\n4) mountain\n5) crocodile'
-            },
-            { 
-                stimulus: 'images/A_bee_sigma_7.jpg', 
-                correct_category_key: '1', 
-                correct_object_key: '3',    
-                category_choices: '1) insect\n2) mammal\n3) reptile\n4) household item\n5) bird',
-                object_choices: '1) spider\n2) cactus\n3) bee\n4) clown\n5) octopus'
-            },
-            // Uebungsdurchlauf 2 (Dolphin / Ant)
-            { 
-                stimulus: 'images/0_dolphin.new_gauss3.jpg', 
-                correct_category_key: '2', 
-                correct_object_key: '4',    
-                category_choices: '1) insect\n2) mammal\n3) reptile\n4) household item\n5) bird',
-                object_choices: '1) duck\n2) ant\n3) crocodile\n4) dolphin\n5) horse'
-            },
-            { 
-                stimulus: 'images/0_ant_gauss2.jpg', 
-                correct_category_key: '2', 
-                correct_object_key: '4',    
-                category_choices: '1) bird\n2) insect\n3) reptile\n4) household item\n5) mammal',
-                object_choices: '1) bat\n2) butterfly\n3) dog\n4) ant\n5) chicken'
-            },
-            // Uebungsdurchlauf 3 (Pigeon / Sloth)
-            { 
-                stimulus: 'images/0_pigeon_filt1_gauss2.jpg', 
-                correct_category_key: '4', 
-                correct_object_key: '5',    
-                category_choices: '1) mammal\n2) insect\n3) reptile\n4) bird\n5) household item',
-                object_choices: '1) oyster\n2) leaf\n3) nursery\n4) turtle\n5) pigeon'
-            },
-            { 
-                stimulus: 'images/0_sloth_gauss4.jpg', 
-                correct_category_key: '4', 
-                correct_object_key: '5',    
-                category_choices: '1) household item\n2) insect\n3) reptile\n4) mammal\n5) bird',
-                object_choices: '1) squirrel\n2) crab\n3) monkey\n4) panda\n5) sloth'
-            },
-            // Uebungsdurchlauf 4 (Snake / Watering Can)
-            { 
-                stimulus: 'images/0_snake2_new_gauss2.jpg', 
-                correct_category_key: '5', 
-                correct_object_key: '2',    
-                category_choices: '1) mammal\n2) insect\n3) bird\n4) household item\n5) reptile',
-                object_choices: '1) sailing boat\n2) snake\n3) tooth brush\n4) duck\n5) beetle'
-            },
-            { 
-                stimulus: 'images/0_wateringcan_gauss4.jpg', 
-                correct_category_key: '5', 
-                correct_object_key: '2',    
-                category_choices: '1) mammal\n2) insect\n3) reptile\n4) bird\n5) household item',
-                object_choices: '1) desktop\n2) watering can\n3) cabin\n4) knife\n5) lantern'
-            }
-        ];
-
-        // -----------------------------------------------------------
-        // 2. TRIAL STRUCTURE DEFINITION
-        // -----------------------------------------------------------
-        
-        let instruction_timeline = [
-            // Instruction Page 1 (ExpEinführung1)
-            {
-                type: jsPsychHtmlKeyboardResponse,
-                stimulus: 
-                    '<h2>Object recognition task</h2>' +
-                    '<p><strong>Welcome and thank you for taking part.</strong></p>' +
-                    '<p>In this task you will see black-and-white pictures (called "Mooney images").</p>' +
-                    '<p>Each picture hides a familiar object (for example: mouse, chair).</p>' +
-                    '<p>Your job: say which object you see.</p>' +
-                    '<p style="margin-top: 30px;">Press the **SPACEBAR** to continue.</p>',
-                choices: [' ']
-            },
-            // Instruction Page 2 (ExpEinführung2)
-            {
-                type: jsPsychHtmlKeyboardResponse,
-                stimulus: 
-                    '<h2>Object recognition task</h2>' +
-                    '<p>Press **Enter** the moment you think you see the object.</p>' +
-                    '<p>You have up to 20 seconds per picture.</p>' +
-                    '<p>Once pressed Enter, you see 5 categories (e.g., mammal, bird). Choose the correct category for the object.</p>' +
-                    '<p>Then you’ll see 5 object options — select the exact object.</p>' +
-                    '<p>You have only 5 seconds for each response.</p>' +
-                    '<p style="margin-top: 20px;"><strong>Important: Use the number keys on the top row of your keyboard (1, 2, 3, 4, 5).</strong></p>' +
-                    '<p style="margin-top: 30px;">Press the **SPACEBAR** to continue.</p>',
-                choices: [' ']
-            },
-            // Instruction Page 3 (ExpEinführung3 - Start Task)
-            {
-                type: jsPsychHtmlKeyboardResponse,
-                stimulus: 
-                    '<h2>Object recognition task</h2>' +
-                    '<p><strong>We will start with 8 screening trials.</strong></p>' +
-                    '<p>If you score below ' + (cutoff_score * 100) + '% correct, the study ends here.</p>' +
-                    '<p style="margin-top: 30px;">Click **Enter** to start the task.</p>',
-                choices: ['Enter']
-            }
-        ];
-
-
-        const mooney_trial_template = {
-            timeline: [
-                /* A. FIXATION CROSS (500ms) */
-                {
-                    type: jsPsychHtmlKeyboardResponse,
-                    stimulus: '<div style="font-size:60px;">+</div>',
-                    choices: "NO_KEYS", 
-                    trial_duration: 500
-                },
-                
-                /* B. MOONEY IMAGE & RT COLLECTION (20 seconds max) */
-                {
-                    type: jsPsychImageKeyboardResponse,
-                    stimulus: jsPsych.timelineVariable('stimulus'),
-                    choices: ['Enter'], 
-                    render_on_canvas: false, 
-                    trial_duration: 20000, 
-                    data: {
-                        task_part: 'Image_Recognition',
-                        stimulus_filename: jsPsych.timelineVariable('stimulus')
-                    },
-                    on_finish: function(data) {
-                        data.recognized = data.response !== null;
-                        jsPsych.data.get().addToLast({ image_recognized: data.recognized });
-                    }
-                },
-                
-                /* C. CATEGORY RESPONSE (5 seconds max) */
-                {
-                    type: jsPsychHtmlKeyboardResponse,
-                    stimulus: function(){
-                        return '<p style="font-size: 24px;">Choose the correct category (Press 1-5):</p>' + 
-                                '<div class="stimulus-text-container">' + jsPsych.timelineVariable('category_choices').replace(/\n/g, '<br>') + '</div>';
-                    },
-                    choices: ['1', '2', '3', '4', '5'],
-                    trial_duration: 5000, 
-                    data: {
-                        task_part: 'Category_Choice',
-                        correct_response: jsPsych.timelineVariable('correct_category_key')
-                    },
-                    // CONDITIONAL SKIP: Only run if 'Enter' was pressed in the previous trial
-                    conditional_function: function() {
-                        const prev_data = jsPsych.data.get().last(1).values[0];
-                        return prev_data.image_recognized;
-                    },
-                    on_finish: function(data) {
-                        data.correct_A = jsPsych.pluginAPI.compareKeys(data.response, data.correct_response);
-                        jsPsych.data.get().addToLast({ category_correct: data.correct_A });
-                    }
-                },
-                
-                /* D. OBJECT RESPONSE (5 seconds max) */
-                {
-                    type: jsPsychHtmlKeyboardResponse,
-                    stimulus: function(){
-                        return '<p style="font-size: 24px;">Choose the exact object (Press 1-5):</p>' + 
-                                '<div class="stimulus-text-container">' + jsPsych.timelineVariable('object_choices').replace(/\n/g, '<br>') + '</div>';
-                    },
-                    choices: ['1', '2', '3', '4', '5'],
-                    trial_duration: 5000, 
-                    data: {
-                        task_part: 'Object_Choice',
-                        correct_response: jsPsych.timelineVariable('correct_object_key')
-                    },
-                    // CONDITIONAL SKIP: Only run if Category choice was correct
-                    conditional_function: function() {
-                        const prev_data = jsPsych.data.get().last(1).values[0];
-                        return prev_data.category_correct;
-                    },
-                    on_finish: function(data) {
-                        // Check for correctness (cor_countB) and update the total score
-                        data.correct_B = jsPsych.pluginAPI.compareKeys(data.response, data.correct_response);
-                        if (data.correct_B) {
-                            current_score++;
-                        }
-                    }
-                }
-            ],
-            timeline_variables: all_stimuli,
-            randomize_order: true
-        };
-
-        let main_timeline = instruction_timeline;
-        main_timeline.push(mooney_trial_template);
-
-        // -----------------------------------------------------------
-        // 3. START EXPERIMENT AND REDIRECT TO QUALTRICS
-        // -----------------------------------------------------------
-
-        jsPsych.run(main_timeline);
-
-        jsPsych.onFinish(function() {
-            // Calculate final percentage score (cor_percentB)
-            const final_percent = (current_score / total_trials).toFixed(3); 
-            
-            // Redirects the whole browser window back to Qualtrics, passing the score in the URL
-            let qualtrics_url = new URL(parent.location.href);
-            const redirection_target = qualtrics_url.origin + qualtrics_url.pathname + '?score=' + final_percent;
-            
-            parent.location.replace(redirection_target);
-        });
-        
-    </script>
+    <script src="experiment.js"></script>
 </body>
 </html>
