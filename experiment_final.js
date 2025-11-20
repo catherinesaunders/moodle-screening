@@ -58,7 +58,7 @@ let preload = {
     show_progress_bar: true, auto_translate: false, continue_after_error: false
 };
 
-// **Helper function to reliably retrieve data via filtration**
+// Helper function to reliably retrieve data via filtration
 function getStimulusData(key) {
     const image_trial_data = jsPsych.data.get().filter({task_part: 'Image_Recognition'}).last(1).values()[0];
     
@@ -183,9 +183,10 @@ jsPsych.run(main_timeline, {
         const final_percent = (current_score / total_trials).toFixed(3); 
         const response_id = getParameterByName('participant'); 
         
+        // *** VERIFIED FIX: Using the exact Anonymous Survey Link ***
         const base_return_url = 'https://duke.qualtrics.com/jfe/form/SV_3CRfinpvLk65sBU'; 
 
-        // CRITICAL FIX: Parameter names must match Qualtrics Embedded Data fields
+        // Parameter names match Qualtrics Embedded Data fields
         const redirection_target = base_return_url + 
                                    '?MoodleScore=' + final_percent + 
                                    '&subjID=' + response_id; 
