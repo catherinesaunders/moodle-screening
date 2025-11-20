@@ -18,8 +18,6 @@ function getParameterByName(name, url = window.location.href) {
 // -----------------------------------------------------------
 // 2. STIMULI DEFINITION (The source of truth for data)
 // -----------------------------------------------------------
-// NOTE: This uses the simple relative path 'images/' which should work 
-// once the index.html pathing is fixed.
 const GITHUB_PAGES_BASE = 'images/'; 
 
 const all_stimuli_definitions = [
@@ -53,7 +51,6 @@ let instruction_timeline = [
 
 let preload = {
     type: jsPsychPreload,
-    // The images array now uses the already-mapped full path
     images: function() {
         return all_stimuli.map(s => s.stimulus);
     }, 
@@ -61,21 +58,17 @@ let preload = {
     show_progress_bar: true, auto_translate: false, continue_after_error: false
 };
 
-// **CRITICAL FIX: Helper function to reliably retrieve data via filtration**
+// **Helper function to reliably retrieve data via filtration**
 function getStimulusData(key) {
-    // Search backwards through the data stream for the most recent 
-    // Image_Recognition trial, which always contains the stimulus_filename.
     const image_trial_data = jsPsych.data.get().filter({task_part: 'Image_Recognition'}).last(1).values()[0];
     
     if (!image_trial_data || !image_trial_data.stimulus_filename) {
-        // If the lookup fails (e.g., during the very first instruction trial, or if data is corrupt)
         console.error("Could not retrieve image trial data by filtering for task_part: 'Image_Recognition'.");
         return 'Error: Index lookup failed.';
     }
 
     const current_stimulus_path = image_trial_data.stimulus_filename;
     
-    // Find the matching object in the all_stimuli array using the full path
     const stimulus_data_match = all_stimuli.find(
         item => item.stimulus === current_stimulus_path
     );
@@ -85,7 +78,6 @@ function getStimulusData(key) {
         return 'Error: Failed to retrieve category choices.';
     }
     
-    // Return the requested key (category_choices or object_choices)
     return stimulus_data_match[key];
 }
 
@@ -103,16 +95,13 @@ const mooney_trial_template = {
         // B. MOONEY IMAGE & RT COLLECTION (20 seconds max)
         {
             type: jsPsychImageKeyboardResponse,
-            // The full path is already inside the stimulus property of the timeline variable
             stimulus: jsPsych.timelineVariable('stimulus'),
-            
             choices: ['Enter'], 
             render_on_canvas: false, 
             trial_duration: 20000, 
             
             data: { 
                 task_part: 'Image_Recognition', 
-                // Store the full path for later lookup
                 stimulus_filename: jsPsych.timelineVariable('stimulus') 
             },
             on_finish: function(data) {
@@ -140,7 +129,6 @@ const mooney_trial_template = {
             
             choices: ['1', '2', '3', '4', '5'],
             trial_duration: 5000, 
-            // The correct response is retrieved from the timeline variables, which were stable
             data: { task_part: 'Category_Choice', correct_response: jsPsych.timelineVariable('correct_category_key') },
             on_finish: function(data) {
                 data.answered_A = data.response !== null;
@@ -167,7 +155,6 @@ const mooney_trial_template = {
             },
             choices: ['1', '2', '3', '4', '5'],
             trial_duration: 5000, 
-            // The correct response is retrieved from the timeline variables
             data: { task_part: 'Object_Choice', correct_response: jsPsych.timelineVariable('correct_object_key') },
             
             on_finish: function(data) {
@@ -178,7 +165,6 @@ const mooney_trial_template = {
             }
         }
     ],
-    // Randomized trials are handled correctly by the getStimulusData function
     timeline_variables: all_stimuli,
     randomize_order: true
 };
@@ -195,14 +181,14 @@ main_timeline.push(mooney_trial_template);
 jsPsych.run(main_timeline, {
     on_finish: function() {
         const final_percent = (current_score / total_trials).toFixed(3); 
-        
         const response_id = getParameterByName('participant'); 
         
         const base_return_url = 'https://duke.qualtrics.com/jfe/form/SV_3CRfinpvLk65sBU'; 
 
+        // CRITICAL FIX: Parameter names must match Qualtrics Embedded Data fields
         const redirection_target = base_return_url + 
-                                   '?score=' + final_percent + 
-                                   '&responseID=' + response_id; 
+                                   '?MoodleScore=' + final_percent + 
+                                   '&subjID=' + response_id; 
 
         window.location.replace(redirection_target);
     }
