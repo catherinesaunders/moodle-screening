@@ -62,16 +62,28 @@ let preload = {
 
 // **Helper function to retrieve data directly from the original stimulus array**
 function getStimulusData(key) {
-    // FIX: Use the stable timeline index (loop index) to look up stimulus data.
-    // This index is unaffected by instruction or preload trials.
-    const current_loop_index = jsPsych.getTimelineIndex(); 
+    // FIX: Retrieve the filename from the data of the PREVIOUS trial (the image trial)
+    const previous_trial_data = jsPsych.data.get().last(1).values()[0];
+    
+    if (!previous_trial_data || !previous_trial_data.stimulus_filename) {
+        console.error("Could not retrieve data from the previous trial.");
+        return 'Error: Index lookup failed.';
+    }
 
-    if (current_loop_index < 0 || current_loop_index >= all_stimuli.length) {
-        console.error(`Index out of bounds: ${current_loop_index}`);
-        return 'Error: Index out of bounds.';
+    const current_stimulus_path = previous_trial_data.stimulus_filename;
+    
+    // Find the matching object in the all_stimuli array using the full path
+    const stimulus_data_match = all_stimuli.find(
+        item => item.stimulus === current_stimulus_path
+    );
+
+    if (!stimulus_data_match) {
+        console.error(`Stimulus data not found for path: ${current_stimulus_path}`);
+        return 'Error: Failed to retrieve category choices.';
     }
     
-    return all_stimuli[current_loop_index][key];
+    // Return the requested key (category_choices or object_choices)
+    return stimulus_data_match[key];
 }
 
 
