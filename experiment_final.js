@@ -47,6 +47,15 @@ let preload = {
     show_progress_bar: true, auto_translate: false, continue_after_error: false
 };
 
+// Custom function to safely replace newline characters for the stimulus
+function formatChoices(choices) {
+    if (typeof choices === 'string') {
+        return choices.replace(/\n/g, '<br>');
+    }
+    // Return a controlled error string if the variable is not a string (i.e., undefined)
+    return 'Error: Choices unavailable.'; 
+}
+
 const mooney_trial_template = {
     timeline: [
         // A. FIXATION CROSS (500ms)
@@ -66,21 +75,16 @@ const mooney_trial_template = {
             }
         },
         
-        // C. CATEGORY RESPONSE (5 seconds max) - FIX APPLIED
+        // C. CATEGORY RESPONSE (5 seconds max) - FINAL ROBUST FIX
         {
             type: jsPsychHtmlKeyboardResponse,
-            // *** FINAL FIX: Use Template Literal to force variable evaluation inside the string ***
-            stimulus: function(){
-                const category_options = jsPsych.timelineVariable('category_choices');
-                if (typeof category_options !== 'string') {
-                    // Fallback to ensure it's a string, just in case
-                    return '<p>Error: Could not load category choices.</p>';
-                }
+            // *** FINAL FIX: Use a custom function in the stimulus parameter ***
+            stimulus: function() {
+                const choices = jsPsych.timelineVariable('category_choices');
+                const formatted_choices = formatChoices(choices);
                 return `
                     <p style="font-size: 24px;">Choose the correct category (Press 1-5):</p>
-                    <div class="stimulus-text-container">
-                        ${category_options.replace(/\n/g, '<br>')}
-                    </div>
+                    <div class="stimulus-text-container">${formatted_choices}</div>
                 `;
             },
             
@@ -94,21 +98,16 @@ const mooney_trial_template = {
             }
         },
         
-        // D. OBJECT RESPONSE (5 seconds max) - FIX APPLIED
+        // D. OBJECT RESPONSE (5 seconds max) - FINAL ROBUST FIX
         {
             type: jsPsychHtmlKeyboardResponse,
-            // *** FINAL FIX: Use Template Literal to force variable evaluation inside the string ***
-            stimulus: function(){
-                const object_options = jsPsych.timelineVariable('object_choices');
-                if (typeof object_options !== 'string') {
-                    // Fallback to ensure it's a string, just in case
-                    return '<p>Error: Could not load object choices.</p>';
-                }
+            // *** FINAL FIX: Use a custom function in the stimulus parameter ***
+            stimulus: function() {
+                const choices = jsPsych.timelineVariable('object_choices');
+                const formatted_choices = formatChoices(choices);
                 return `
                     <p style="font-size: 24px;">Choose the exact object (Press 1-5):</p>
-                    <div class="stimulus-text-container">
-                        ${object_options.replace(/\n/g, '<br>')}
-                    </div>
+                    <div class="stimulus-text-container">${formatted_choices}</div>
                 `;
             },
             choices: ['1', '2', '3', '4', '5'],
