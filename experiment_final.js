@@ -183,14 +183,23 @@ jsPsych.run(main_timeline, {
         const final_percent = (current_score / total_trials).toFixed(3); 
         const response_id = getParameterByName('participant'); 
         
-        // *** VERIFIED FIX: Using the exact Anonymous Survey Link ***
+        // VERIFIED Anonymous Survey Link
         const base_return_url = 'https://duke.qualtrics.com/jfe/form/SV_3CRfinpvLk65sBU'; 
 
-        // Parameter names match Qualtrics Embedded Data fields
+        // CRITICAL: Ensure the base URL and parameters are concatenated correctly
         const redirection_target = base_return_url + 
                                    '?MoodleScore=' + final_percent + 
                                    '&subjID=' + response_id; 
+        
+        // === DEBUG STEP: This will show you the URL ===
+        alert("Redirecting to: " + redirection_target);
+        // ===============================================
 
-        window.location.replace(redirection_target);
+        // Pause for a moment, then redirect
+        setTimeout(function() {
+            window.location.replace(redirection_target);
+        }, 500); // 500ms delay to ensure the alert is seen
+    }
+});
     }
 });
