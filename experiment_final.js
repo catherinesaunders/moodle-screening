@@ -1,91 +1,209 @@
-<!DOCTYPE html>
-<html>
-<head>
-    <title>Mooney Screening Task</title>
-    <link rel="stylesheet" href="jspsych/css/jspsych.css"> 
+// -----------------------------------------------------------
+// 1. INITIALIZATION AND GLOBAL VARIABLES
+// -----------------------------------------------------------
+const jsPsych = initJsPsych({ display_element: 'jspsych-display' }); 
+let current_score = 0; 
+const total_trials = 8;
+const cutoff_score = 0.4; 
+
+function getParameterByName(name, url = window.location.href) {
+    name = name.replace(/[\[\]]/g, '\\$&');
+    var regex = new RegExp('[?&]' + name + '(=([^&#]*)|&|#|$)'),
+        results = regex.exec(url);
+    if (!results) return null;
+    if (!results[2]) return '';
+    return decodeURIComponent(results[2].replace(/\+/g, ' '));
+}
+
+// -----------------------------------------------------------
+// 2. STIMULI DEFINITION (The source of truth for data)
+// -----------------------------------------------------------
+// NOTE: This uses the simple relative path 'images/' which should work 
+// once the index.html pathing is fixed.
+const GITHUB_PAGES_BASE = 'images/'; 
+
+const all_stimuli_definitions = [
+    { stimulus: 'A_cougar_sigma_3.jpg', correct_category_key: '1', correct_object_key: '3', category_choices: '1) mammal\n2) insect\n3) reptile\n4) household item\n5) bird', object_choices: '1) bunny\n2) rat\n3) cougar\n4) mountain\n5) crocodile' },
+    { stimulus: 'A_bee_sigma_7.jpg', correct_category_key: '1', correct_object_key: '3', category_choices: '1) insect\n2) mammal\n3) reptile\n4) household item\n5) bird', object_choices: '1) spider\n2) cactus\n3) bee\n4) clown\n5) octopus' },
+    { stimulus: '0_dolphin.new_gauss3.jpg', correct_category_key: '2', correct_object_key: '4', category_choices: '1) insect\n2) mammal\n3) reptile\n4) household item\n5) bird', object_choices: '1) duck\n2) ant\n3) crocodile\n4) dolphin\n5) horse' },
+    { stimulus: '0_ant_gauss2.jpg', correct_category_key: '2', correct_object_key: '4', category_choices: '1) bird\n2) insect\n3) reptile\n4) household item\n5) mammal', object_choices: '1) bat\n2) butterfly\n3) dog\n4) ant\n5) chicken' },
+    { stimulus: '0_pigeon_filt1_gauss2.jpg', correct_category_key: '4', correct_object_key: '5', category_choices: '1) mammal\n2) insect\n3) reptile\n4) bird\n5) household item', object_choices: '1) oyster\n2) leaf\n3) nursery\n4) turtle\n5) pigeon' },
+    { stimulus: '0_sloth_gauss4.jpg', correct_category_key: '4', correct_object_key: '5', category_choices: '1) household item\n2) insect\n3) reptile\n4) mammal\n5) bird', object_choices: '1) squirrel\n2) crab\n3) monkey\n4) panda\n5) sloth' },
+    { stimulus: '0_snake2_new_gauss2.jpg', correct_category_key: '5', correct_object_key: '2', category_choices: '1) mammal\n2) insect\n3) bird\n4) household item\n5) reptile', object_choices: '1) sailing boat\n2) snake\n3) tooth brush\n4) duck\n5) beetle' },
+    { stimulus: '0_wateringcan_gauss4.jpg', correct_category_key: '5', correct_object_key: '2', category_choices: '1) mammal\n2) insect\n3) reptile\n4) bird\n5) household item', object_choices: '1) desktop\n2) watering can\n3) cabin\n4) knife\n5) lantern' }
+];
+
+// Map the full relative path into the stimulus property now.
+const all_stimuli = all_stimuli_definitions.map(item => {
+    return {
+        ...item, 
+        stimulus: GITHUB_PAGES_BASE + item.stimulus 
+    };
+});
+
+// -----------------------------------------------------------
+// 3. TRIAL DEFINITION
+// -----------------------------------------------------------
+
+let instruction_timeline = [
+    { type: jsPsychHtmlKeyboardResponse, stimulus: `<h2>Object Recognition Task</h2><p><strong>Welcome.</strong></p><p>You will see black-and-white Mooney images. Try to identify the object.</p><p style="margin-top: 30px;">Press the <strong>SPACEBAR</strong> to continue.</p>`, choices: [' '] },
+    { type: jsPsychHtmlKeyboardResponse, stimulus: `<h2>Instructions</h2><p>Press <strong>Enter</strong> the moment you think you see the object (max 20s).</p><p>You will then have 5s for the category choice and 5s for the object choice.</p><p><strong>Use the number keys (1, 2, 3, 4, 5).</strong></p><p style="margin-top: 30px;">Press the <strong>SPACEBAR</strong> to continue.</p>`, choices: [' '] },
+    { type: jsPsychHtmlKeyboardResponse, stimulus: `<h2>Screening Trials</h2><p>We will start with 8 screening trials. You need ${cutoff_score * 100}% correct to proceed.</p><p style="margin-top: 30px;">Click <strong>Enter</strong> to start the task.</p>`, choices: ['Enter'] }
+];
+
+let preload = {
+    type: jsPsychPreload,
+    // The images array now uses the already-mapped full path
+    images: function() {
+        return all_stimuli.map(s => s.stimulus);
+    }, 
+    message: '<p style="font-size: 24px;">Please wait while the experiment loads...</p>',
+    show_progress_bar: true, auto_translate: false, continue_after_error: false
+};
+
+// **CRITICAL FIX: Helper function to reliably retrieve data via filtration**
+function getStimulusData(key) {
+    // Search backwards through the data stream for the most recent 
+    // Image_Recognition trial, which always contains the stimulus_filename.
+    const image_trial_data = jsPsych.data.get().filter({task_part: 'Image_Recognition'}).last(1).values()[0];
     
-    <style>
-        body {
-            /* Basic body styling (centering, background, font) */
-            background-color: black;
-            color: white;
-            font-family: "Open Sans", "Arial", sans-serif; 
-            text-align: center;
-            
-            /* FIX: Increase base font size and line spacing */
-            font-size: 18px; 
-            line-height: 1.6; 
-        }
-        
-        /* Ensure the main jsPsych container is centered and takes full height */
-        #jspsych-display {
-            margin: 0 auto;
-            width: 100%;
-            height: 100%;
-            display: flex;
-            justify-content: center;
-            align-items: center;
-            min-height: 100vh; /* Ensures content is vertically centered */
-        }
+    if (!image_trial_data || !image_trial_data.stimulus_filename) {
+        // If the lookup fails (e.g., during the very first instruction trial, or if data is corrupt)
+        console.error("Could not retrieve image trial data by filtering for task_part: 'Image_Recognition'.");
+        return 'Error: Index lookup failed.';
+    }
 
-        /* FIX 1: Image Sizing for Consistency and Quality */
-        /* Target images displayed by the jsPsych plugin */
-        #jspsych-display img {
-            max-width: 600px; /* Set a maximum width for all images */
-            max-height: 600px; /* Set a maximum height to control size */
-            width: auto; /* Allow width to scale proportionally */
-            height: auto; /* Allow height to scale proportionally */
-            object-fit: contain; /* Ensures the whole image is visible */
-            margin: 20px 0; /* Add vertical margin around image */
-            
-            /* Since the images are already Mooney images, good quality is assumed based on file. 
-               This scaling ensures they are presented consistently. */
-        }
-
-        /* FIX 2: Text Styling for Headings and Choice Containers */
-        
-        /* Ensure H2 elements within the jsPsych trials are white and larger */
-        h2 {
-            color: white;
-            font-size: 28px;
-            margin-bottom: 20px;
-        }
-        
-        /* This ensures the text containers for choices are properly formatted */
-        .stimulus-text-container {
-            color: white;
-            text-align: left;
-            
-            /* FIX: Increase font size and line spacing for choice options */
-            font-size: 22px; 
-            line-height: 1.8; 
-            
-            white-space: pre-wrap; 
-            margin: 20px auto; /* Center choices */
-            max-width: 600px; 
-        }
-        
-        /* Targets the instruction text paragraphs for larger font */
-        #jspsych-content p {
-            font-size: 20px;
-            line-height: 1.7;
-        }
-
-    </style>
+    const current_stimulus_path = image_trial_data.stimulus_filename;
     
-    <meta name="viewport" content="width=device-width, initial-scale=1">
-</head>
-<body>
+    // Find the matching object in the all_stimuli array using the full path
+    const stimulus_data_match = all_stimuli.find(
+        item => item.stimulus === current_stimulus_path
+    );
+
+    if (!stimulus_data_match) {
+        console.error(`Stimulus data not found for path: ${current_stimulus_path}`);
+        return 'Error: Failed to retrieve category choices.';
+    }
     
-    <div id="jspsych-display"></div>
+    // Return the requested key (category_choices or object_choices)
+    return stimulus_data_match[key];
+}
 
-    <script src="jspsych/jspsych.js"></script>
 
-    <script src="jspsych/plugin-preload.js"></script>
-    <script src="jspsych/plugin-html-keyboard-response.js"></script>
-    <script src="jspsych/plugin-image-keyboard-response.js"></script>
+const mooney_trial_template = {
+    timeline: [
+        // A. FIXATION CROSS (500ms)
+        { 
+            type: jsPsychHtmlKeyboardResponse, 
+            stimulus: '<div style="font-size:60px; color: white;">+</div>', 
+            choices: "NO_KEYS", 
+            trial_duration: 500 
+        },
+        
+        // B. MOONEY IMAGE & RT COLLECTION (20 seconds max)
+        {
+            type: jsPsychImageKeyboardResponse,
+            // The full path is already inside the stimulus property of the timeline variable
+            stimulus: jsPsych.timelineVariable('stimulus'),
+            
+            choices: ['Enter'], 
+            render_on_canvas: false, 
+            trial_duration: 20000, 
+            
+            data: { 
+                task_part: 'Image_Recognition', 
+                // Store the full path for later lookup
+                stimulus_filename: jsPsych.timelineVariable('stimulus') 
+            },
+            on_finish: function(data) {
+                data.recognized = data.response !== null;
+                jsPsych.data.get().addToLast({ image_recognized: data.recognized });
+            }
+        },
+        
+        // C. CATEGORY RESPONSE (5 seconds max) 
+        {
+            type: jsPsychHtmlKeyboardResponse,
+            stimulus: function(){
+                try {
+                    const choices = getStimulusData('category_choices');
+                    const formatted_choices = choices.replace(/\n/g, '<br>');
+                    
+                    return `
+                        <p style="font-size: 24px;">Choose the correct category (Press 1-5):</p>
+                        <div class="stimulus-text-container">${formatted_choices}</div>
+                    `;
+                } catch (e) {
+                    return '<p style="color: red;">Error: Failed to retrieve category choices.</p>';
+                }
+            },
+            
+            choices: ['1', '2', '3', '4', '5'],
+            trial_duration: 5000, 
+            // The correct response is retrieved from the timeline variables, which were stable
+            data: { task_part: 'Category_Choice', correct_response: jsPsych.timelineVariable('correct_category_key') },
+            on_finish: function(data) {
+                data.answered_A = data.response !== null;
+                data.correct_A = jsPsych.pluginAPI.compareKeys(data.response, data.correct_response);
+                jsPsych.data.get().addToLast({ category_correct: data.correct_A });
+            }
+        },
+        
+        // D. OBJECT RESPONSE (5 seconds max) 
+        {
+            type: jsPsychHtmlKeyboardResponse,
+            stimulus: function(){
+                 try {
+                    const choices = getStimulusData('object_choices');
+                    const formatted_choices = choices.replace(/\n/g, '<br>');
+                    
+                    return `
+                        <p style="font-size: 24px;">Choose the exact object (Press 1-5):</p>
+                        <div class="stimulus-text-container">${formatted_choices}</div>
+                    `;
+                } catch (e) {
+                    return '<p style="color: red;">Error: Failed to retrieve object choices.</p>';
+                }
+            },
+            choices: ['1', '2', '3', '4', '5'],
+            trial_duration: 5000, 
+            // The correct response is retrieved from the timeline variables
+            data: { task_part: 'Object_Choice', correct_response: jsPsych.timelineVariable('correct_object_key') },
+            
+            on_finish: function(data) {
+                data.answered_B = data.response !== null;
+                data.correct_B = jsPsych.pluginAPI.compareKeys(data.response, data.correct_response);
+                
+                if (data.correct_B) { current_score++; }
+            }
+        }
+    ],
+    // Randomized trials are handled correctly by the getStimulusData function
+    timeline_variables: all_stimuli,
+    randomize_order: true
+};
 
-    <script src="experiment_final.js"></script>
-    
-</body>
-</html>
+// -----------------------------------------------------------
+// 4. ASSEMBLE AND RUN TIMELINE
+// -----------------------------------------------------------
+
+let main_timeline = [];
+main_timeline.push(preload); 
+main_timeline = main_timeline.concat(instruction_timeline);
+main_timeline.push(mooney_trial_template);
+
+jsPsych.run(main_timeline, {
+    on_finish: function() {
+        const final_percent = (current_score / total_trials).toFixed(3); 
+        
+        const response_id = getParameterByName('participant'); 
+        
+        const base_return_url = 'https://duke.qualtrics.com/jfe/form/SV_3CRfinpvLk65sBU'; 
+
+        const redirection_target = base_return_url + 
+                                   '?score=' + final_percent + 
+                                   '&responseID=' + response_id; 
+
+        window.location.replace(redirection_target);
+    }
+});
