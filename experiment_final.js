@@ -63,8 +63,8 @@ let preload = {
 // **Helper function to retrieve data directly from the original stimulus array**
 function getStimulusData(key) {
     const finished_trials = jsPsych.data.get().count();
-    // FIX: Corrected trial index after preload and 3 instructions
-    const mooney_index = finished_trials - 4; 
+    // FIX: Corrected trial index after preload and 3 instructions to account for all preceding trials
+    const mooney_index = finished_trials - 5; 
 
     if (mooney_index < 0 || mooney_index >= all_stimuli.length) {
         console.error(`Index out of bounds: ${mooney_index}`);
