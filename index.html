@@ -1,8 +1,12 @@
 <!DOCTYPE html>
 <html>
 <head>
-    <title>Moodle Screening Task</title>
+    <title>Mooney Screening Task</title>
 
+    <!-- CRITICAL FIX: The base tag is essential for stabilizing redirects on GitHub Pages -->
+    <!-- It defines the root URL for all relative links and helps the browser's navigation history. -->
+    <base href="https://catherinesaunders.github.io/moodle-screening/"> 
+    
     <style>
         /* 1. ESSENTIAL JSPSYCH CSS TO HIDE CONTENT BEFORE START */
         #jspsych-display {
@@ -80,6 +84,7 @@
     
     <div id="jspsych-display"></div>
 
+    <!-- Script imports using absolute paths based on the GitHub repository structure -->
     <script src="/moodle-screening/jspsych/jspsych.js"></script>
     <script src="/moodle-screening/jspsych/plugin-preload.js"></script>
     <script src="/moodle-screening/jspsych/plugin-html-keyboard-response.js"></script>
