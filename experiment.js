@@ -56,23 +56,22 @@ const mooney_trial_template = {
         {
             type: jsPsychImageKeyboardResponse,
             stimulus: jsPsych.timelineVariable('stimulus'),
-            choices: ['Enter'], // Keep Enter as the response key
+            choices: ['Enter'], 
             render_on_canvas: false, 
             trial_duration: 20000, 
             data: { task_part: 'Image_Recognition', stimulus_filename: jsPsych.timelineVariable('stimulus') },
             on_finish: function(data) {
-                // This ensures the trial data is logged whether Enter was pressed or the trial timed out.
                 data.recognized = data.response !== null;
                 jsPsych.data.get().addToLast({ image_recognized: data.recognized });
             }
         },
         
-        // C. CATEGORY RESPONSE (5 seconds max) - MUST RUN AFTER B FINISHES
+        // C. CATEGORY RESPONSE (5 seconds max) - TEMPORARY DEBUG
         {
             type: jsPsychHtmlKeyboardResponse,
-            stimulus: function(){
-                return '<p style="font-size: 24px;">Choose the correct category (Press 1-5):</p>' + '<div class="stimulus-text-container">' + jsPsych.timelineVariable('category_choices').replace(/\n/g, '<br>') + '</div>';
-            },
+            // *** CRITICAL CHANGE: USING STATIC STRING TO BYPASS THE ERROR ***
+            stimulus: '<h2>TEST: Timeline Advanced!</h2><p>Press 1 to continue to the next step.</p>',
+            
             choices: ['1', '2', '3', '4', '5'],
             trial_duration: 5000, 
             data: { task_part: 'Category_Choice', correct_response: jsPsych.timelineVariable('correct_category_key') },
@@ -83,7 +82,7 @@ const mooney_trial_template = {
             }
         },
         
-        // D. OBJECT RESPONSE (5 seconds max) - MUST RUN AFTER C FINISHES
+        // D. OBJECT RESPONSE (5 seconds max) 
         {
             type: jsPsychHtmlKeyboardResponse,
             stimulus: function(){
