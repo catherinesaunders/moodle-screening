@@ -1,17 +1,12 @@
 // -----------------------------------------------------------
 // 1. INITIALIZATION AND GLOBAL VARIABLES
 // -----------------------------------------------------------
-
-// Initialize jsPsych, setting the display element ID defined in index.html
 const jsPsych = initJsPsych({ display_element: 'jspsych-display' });
-
-// This path points to your hosted GitHub image folder.
 const IMAGE_BASE_URL = 'images/'; 
 let current_score = 0; 
 const total_trials = 8;
-const cutoff_score = 0.4; // 40%
+const cutoff_score = 0.4; 
 
-// Helper function to extract a URL parameter (like 'participant' ID)
 function getParameterByName(name, url = window.location.href) {
     name = name.replace(/[\[\]]/g, '\\$&');
     var regex = new RegExp('[?&]' + name + '(=([^&#]*)|&|#|$)'),
@@ -24,7 +19,6 @@ function getParameterByName(name, url = window.location.href) {
 // -----------------------------------------------------------
 // 2. STIMULI DEFINITION
 // -----------------------------------------------------------
-
 const all_stimuli = [
     { stimulus: IMAGE_BASE_URL + 'A_cougar_sigma_3.jpg', correct_category_key: '1', correct_object_key: '3', category_choices: '1) mammal\n2) insect\n3) reptile\n4) household item\n5) bird', object_choices: '1) bunny\n2) rat\n3) cougar\n4) mountain\n5) crocodile' },
     { stimulus: IMAGE_BASE_URL + 'A_bee_sigma_7.jpg', correct_category_key: '1', correct_object_key: '3', category_choices: '1) insect\n2) mammal\n3) reptile\n4) household item\n5) bird', object_choices: '1) spider\n2) cactus\n3) bee\n4) clown\n5) octopus' },
@@ -46,7 +40,6 @@ let instruction_timeline = [
     { type: jsPsychHtmlKeyboardResponse, stimulus: `<h2>Screening Trials</h2><p>We will start with 8 screening trials. You need ${cutoff_score * 100}% correct to proceed.</p><p style="margin-top: 30px;">Click <strong>Enter</strong> to start the task.</p>`, choices: ['Enter'] }
 ];
 
-// PRELOAD TRIAL
 let preload = {
     type: jsPsychPreload,
     images: all_stimuli.map(s => s.stimulus),
@@ -63,17 +56,18 @@ const mooney_trial_template = {
         {
             type: jsPsychImageKeyboardResponse,
             stimulus: jsPsych.timelineVariable('stimulus'),
-            choices: ['Enter'], render_on_canvas: false, 
+            choices: ['Enter'], // Keep Enter as the response key
+            render_on_canvas: false, 
             trial_duration: 20000, 
             data: { task_part: 'Image_Recognition', stimulus_filename: jsPsych.timelineVariable('stimulus') },
             on_finish: function(data) {
-                // Record if ENTER was pressed (if response is null, it was a timeout/no press)
+                // This ensures the trial data is logged whether Enter was pressed or the trial timed out.
                 data.recognized = data.response !== null;
                 jsPsych.data.get().addToLast({ image_recognized: data.recognized });
             }
         },
         
-        // C. CATEGORY RESPONSE (5 seconds max) - ALWAYS RUNS
+        // C. CATEGORY RESPONSE (5 seconds max) - MUST RUN AFTER B FINISHES
         {
             type: jsPsychHtmlKeyboardResponse,
             stimulus: function(){
@@ -89,7 +83,7 @@ const mooney_trial_template = {
             }
         },
         
-        // D. OBJECT RESPONSE (5 seconds max) - ALWAYS RUNS
+        // D. OBJECT RESPONSE (5 seconds max) - MUST RUN AFTER C FINISHES
         {
             type: jsPsychHtmlKeyboardResponse,
             stimulus: function(){
@@ -103,7 +97,6 @@ const mooney_trial_template = {
                 data.answered_B = data.response !== null;
                 data.correct_B = jsPsych.pluginAPI.compareKeys(data.response, data.correct_response);
                 
-                // Score only if the object response was correct.
                 if (data.correct_B) { current_score++; }
             }
         }
@@ -121,7 +114,6 @@ main_timeline.push(preload);
 main_timeline = main_timeline.concat(instruction_timeline);
 main_timeline.push(mooney_trial_template);
 
-// *** STANDARD JSPSYCH STARTUP: This is the correct way to start the experiment. ***
 jsPsych.run(main_timeline);
 
 // -----------------------------------------------------------
@@ -131,17 +123,13 @@ jsPsych.run(main_timeline);
 jsPsych.onFinish(function() {
     const final_percent = (current_score / total_trials).toFixed(3); 
     
-    // 1. CAPTURE THE RESPONSE ID PASSED FROM QUALTRICS
     const response_id = getParameterByName('participant'); 
     
-    // 2. QUALTRICS RETURN URL
     const base_return_url = 'https://duke.qualtrics.com/jfe/form/SV_3CRfinpvLk65sBU'; 
 
-    // 3. CONSTRUCT THE REDIRECTION TARGET
     const redirection_target = base_return_url + 
                                '?score=' + final_percent + 
                                '&responseID=' + response_id; 
 
-    // 4. REDIRECT
     window.location.replace(redirection_target);
 });
