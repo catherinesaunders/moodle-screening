@@ -1,3 +1,6 @@
+// IMPORTANT: This script assumes that your index.html file loads the necessary
+// jsPsych plugins via CDN, which creates the following global variables:
+// jsPsychHtmlKeyboardResponse, jsPsychPreload, jsPsychImageKeyboardResponse
 // -----------------------------------------------------------
 // 1. INITIALIZATION & UTILITIES
 // -----------------------------------------------------------
@@ -51,7 +54,8 @@ const all_stimuli = all_stimuli_definitions.map(item => {
 
 // 3.1 Fixation Cross
 const fixation = {
-    type: '@jspsych/plugin-html-keyboard-response',
+    // FIX: Changed from string to global plugin variable
+    type: jsPsychHtmlKeyboardResponse,
     stimulus: '<div style="font-size:60px;">+</div>',
     choices: "NO_KEYS",
     trial_duration: 500,
@@ -60,7 +64,8 @@ const fixation = {
 
 // 3.2 Image Presentation and Identification
 const mooney_image_template = {
-    type: '@jspsych/plugin-image-keyboard-response',
+    // FIX: Changed from string to global plugin variable
+    type: jsPsychImageKeyboardResponse,
     stimulus: jsPsych.timelineVariable('stimulus'),
     choices: ['Enter'], // Press Enter when identified
     render_on_canvas: false,
@@ -81,7 +86,8 @@ const mooney_image_template = {
 
 // 3.3 Category Choice (Conditional on identification)
 const category_choice_template = {
-    type: '@jspsych/plugin-html-keyboard-response',
+    // FIX: Changed from string to global plugin variable
+    type: jsPsychHtmlKeyboardResponse,
     stimulus: function(){
         return `
             <div style="text-align: left;">
@@ -107,7 +113,8 @@ const category_choice_template = {
 
 // 3.4 Object Choice (Conditional on identification)
 const object_choice_template = {
-    type: '@jspsych/plugin-html-keyboard-response',
+    // FIX: Changed from string to global plugin variable
+    type: jsPsychHtmlKeyboardResponse,
     stimulus: function(){
         return `
             <div style="text-align: left;">
@@ -145,13 +152,26 @@ const full_mooney_trial = {
 // -----------------------------------------------------------
 
 let instruction_timeline = [
-    { type: '@jspsych/plugin-html-keyboard-response', stimulus: `<h2>Object Recognition Task</h2><p><strong>Welcome.</strong></p><p>You will see black-and-white Mooney images. Try to identify the object.</p><p style="margin-top: 30px;">Press the <strong>SPACEBAR</strong> to continue.</p>`, choices: [' '] },
-    { type: '@jspsych/plugin-html-keyboard-response', stimulus: `<h2>Instructions</h2><p>Press <strong>Enter</strong> the moment you think you see the object (max 20s).</p><p>You will then have 5s for the category choice and 5s for the object choice.</p><p><strong>Use the number keys (1, 2, 3, 4, 5).</strong></p><p style="margin-top: 30px;">Press the <strong>SPACEBAR</strong> to continue.</p>`, choices: [' '] },
-    { type: '@jspsych/plugin-html-keyboard-response', stimulus: `<h2>Screening Trials</h2><p>We will start with ${total_trials} screening trials. You need ${cutoff_score * 100}% correct (i.e., ${Math.ceil(total_trials * cutoff_score)} out of ${total_trials}) to proceed.</p><p style="margin-top: 30px;">Click <strong>Enter</strong> to start the task.</p>`, choices: ['Enter'] }
+    { 
+        // FIX: Changed from string to global plugin variable
+        type: jsPsychHtmlKeyboardResponse, 
+        stimulus: `<h2>Object Recognition Task</h2><p><strong>Welcome.</strong></p><p>You will see black-and-white Mooney images. Try to identify the object.</p><p style="margin-top: 30px;">Press the <strong>SPACEBAR</strong> to continue.</p>`, choices: [' '] 
+    },
+    { 
+        // FIX: Changed from string to global plugin variable
+        type: jsPsychHtmlKeyboardResponse, 
+        stimulus: `<h2>Instructions</h2><p>Press <strong>Enter</strong> the moment you think you see the object (max 20s).</p><p>You will then have 5s for the category choice and 5s for the object choice.</p><p><strong>Use the number keys (1, 2, 3, 4, 5).</strong></p><p style="margin-top: 30px;">Press the <strong>SPACEBAR</strong> to continue.</p>`, choices: [' '] 
+    },
+    { 
+        // FIX: Changed from string to global plugin variable
+        type: jsPsychHtmlKeyboardResponse, 
+        stimulus: `<h2>Screening Trials</h2><p>We will start with ${total_trials} screening trials. You need ${cutoff_score * 100}% correct (i.e., ${Math.ceil(total_trials * cutoff_score)} out of ${total_trials}) to proceed.</p><p style="margin-top: 30px;">Click <strong>Enter</strong> to start the task.</p>`, choices: ['Enter'] 
+    }
 ];
 
 let preload = {
-    type: '@jspsych/plugin-preload',
+    // FIX: Changed from string to global plugin variable
+    type: jsPsychPreload,
     images: function() { return all_stimuli.map(s => s.stimulus); }, 
     message: '<p style="font-size: 24px;">Please wait while the experiment loads...</p>',
     show_progress_bar: true, auto_translate: false, continue_after_error: false
@@ -162,7 +182,8 @@ let preload = {
 // -----------------------------------------------------------
 
 const final_redirect_trial = {
-    type: '@jspsych/plugin-html-keyboard-response',
+    // FIX: Changed from string to global plugin variable
+    type: jsPsychHtmlKeyboardResponse,
     stimulus: `
         <div style="font-size: 30px; color: black;">
             <p>Task Complete.</p>
