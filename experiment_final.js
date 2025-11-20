@@ -1,7 +1,8 @@
 // -----------------------------------------------------------
 // 1. INITIALIZATION AND GLOBAL VARIABLES
 // -----------------------------------------------------------
-const jsPsych = initJsPsych({ display_element: 'jspsych-display' });
+// FIX: jsPsych.run configuration will handle onFinish now.
+const jsPsych = initJsPsych({ display_element: 'jspsych-display' }); 
 let current_score = 0; 
 const total_trials = 8;
 const cutoff_score = 0.4; 
@@ -18,10 +19,10 @@ function getParameterByName(name, url = window.location.href) {
 // -----------------------------------------------------------
 // 2. STIMULI DEFINITION (The source of truth for data)
 // -----------------------------------------------------------
-const IMAGE_BASE_URL = 'images/'; 
+// FIX: Using './images/' for maximum path compatibility
+const IMAGE_BASE_URL = './images/'; 
 
 const all_stimuli = [
-    // Stimulus now only contains the filename
     { stimulus: 'A_cougar_sigma_3.jpg', correct_category_key: '1', correct_object_key: '3', category_choices: '1) mammal\n2) insect\n3) reptile\n4) household item\n5) bird', object_choices: '1) bunny\n2) rat\n3) cougar\n4) mountain\n5) crocodile' },
     { stimulus: 'A_bee_sigma_7.jpg', correct_category_key: '1', correct_object_key: '3', category_choices: '1) insect\n2) mammal\n3) reptile\n4) household item\n5) bird', object_choices: '1) spider\n2) cactus\n3) bee\n4) clown\n5) octopus' },
     { stimulus: '0_dolphin.new_gauss3.jpg', correct_category_key: '2', correct_object_key: '4', category_choices: '1) insect\n2) mammal\n3) reptile\n4) household item\n5) bird', object_choices: '1) duck\n2) ant\n3) crocodile\n4) dolphin\n5) horse' },
@@ -52,6 +53,7 @@ let preload = {
 // **Helper function to retrieve data directly from the original stimulus array**
 function getStimulusData(key) {
     const finished_trials = jsPsych.data.get().count();
+    // We have 3 introductory trials (preload, 2 instructions) before the first test trial (index 0)
     const mooney_index = finished_trials - 3; 
 
     if (mooney_index < 0 || mooney_index >= all_stimuli.length) {
@@ -76,7 +78,7 @@ const mooney_trial_template = {
         // B. MOONEY IMAGE & RT COLLECTION (20 seconds max)
         {
             type: jsPsychImageKeyboardResponse,
-            // *** FINAL FIX: Reverting to the custom function to explicitly build the full path ***
+            // Full path generated here, as required by the plugin
             stimulus: function() {
                  return IMAGE_BASE_URL + jsPsych.timelineVariable('stimulus');
             },
@@ -163,22 +165,23 @@ main_timeline.push(preload);
 main_timeline = main_timeline.concat(instruction_timeline);
 main_timeline.push(mooney_trial_template);
 
-jsPsych.run(main_timeline);
+jsPsych.run(main_timeline, {
+    // FIX: Moved the onFinish logic here for stability
+    on_finish: function() {
+        const final_percent = (current_score / total_trials).toFixed(3); 
+        
+        const response_id = getParameterByName('participant'); 
+        
+        const base_return_url = 'https://duke.qualtrics.com/jfe/form/SV_3CRfinpvLk65sBU'; 
 
-// -----------------------------------------------------------
-// 5. FINISH EXPERIMENT AND REDIRECT TO QUALTRICS
-// -----------------------------------------------------------
+        const redirection_target = base_return_url + 
+                                   '?score=' + final_percent + 
+                                   '&responseID=' + response_id; 
 
-jsPsych.onFinish(function() {
-    const final_percent = (current_score / total_trials).toFixed(3); 
-    
-    const response_id = getParameterByName('participant'); 
-    
-    const base_return_url = 'https://duke.qualtrics.com/jfe/form/SV_3CRfinpvLk65sBU'; 
-
-    const redirection_target = base_return_url + 
-                               '?score=' + final_percent + 
-                               '&responseID=' + response_id; 
-
-    window.location.replace(redirection_target);
+        window.location.replace(redirection_target);
+    }
 });
+
+// -----------------------------------------------------------
+// 5. FINISH EXPERIMENT AND REDIRECT TO QUALTRICS (Removed jsPsych.onFinish call)
+// -----------------------------------------------------------
