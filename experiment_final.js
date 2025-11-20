@@ -62,15 +62,17 @@ let preload = {
 
 // **Helper function to retrieve data directly from the original stimulus array**
 function getStimulusData(key) {
-    // FIX: Retrieve the filename from the data of the PREVIOUS trial (the image trial)
-    const previous_trial_data = jsPsych.data.get().last(1).values()[0];
+    // FIX: Search backwards through the data stream for the most recent 
+    // Image_Recognition trial, which always contains the filename.
+    const image_trial_data = jsPsych.data.get().filter({task_part: 'Image_Recognition'}).last(1).values()[0];
     
-    if (!previous_trial_data || !previous_trial_data.stimulus_filename) {
-        console.error("Could not retrieve data from the previous trial.");
+    if (!image_trial_data || !image_trial_data.stimulus_filename) {
+        // If we can't find it, we stop.
+        console.error("Could not retrieve image trial data by filtering for task_part: 'Image_Recognition'.");
         return 'Error: Index lookup failed.';
     }
 
-    const current_stimulus_path = previous_trial_data.stimulus_filename;
+    const current_stimulus_path = image_trial_data.stimulus_filename;
     
     // Find the matching object in the all_stimuli array using the full path
     const stimulus_data_match = all_stimuli.find(
