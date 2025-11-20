@@ -17,7 +17,7 @@ function getParameterByName(name, url = window.location.href) {
 }
 
 // -----------------------------------------------------------
-// 2. STIMULI DEFINITION
+// 2. STIMULI DEFINITION (The source of truth for data)
 // -----------------------------------------------------------
 const all_stimuli = [
     { stimulus: IMAGE_BASE_URL + 'A_cougar_sigma_3.jpg', correct_category_key: '1', correct_object_key: '3', category_choices: '1) mammal\n2) insect\n3) reptile\n4) household item\n5) bird', object_choices: '1) bunny\n2) rat\n3) cougar\n4) mountain\n5) crocodile' },
@@ -47,14 +47,24 @@ let preload = {
     show_progress_bar: true, auto_translate: false, continue_after_error: false
 };
 
-// Custom function to safely replace newline characters for the stimulus
-function formatChoices(choices) {
-    if (typeof choices === 'string') {
-        return choices.replace(/\n/g, '<br>');
+// **Helper function to retrieve data directly from the original stimulus array**
+function getStimulusData(key) {
+    // This finds the index of the main timeline node (the block of 4 trials)
+    const node_id = jsPsych.get-current-timeline-node().timeline_id;
+    // The current trial index within the main timeline node (0 to 7)
+    const index = jsPsych.get-current-timeline-node().iteration; 
+    
+    // Safety check just in case the node is wrong (should be removed once confirmed working)
+    if (index === undefined) {
+        // Fallback for unexpected jsPsych structure
+        const timeline = jsPsych.data.get().select('task_part').values;
+        return all_stimuli[timeline.length - 3][key];
     }
-    // Return a controlled error string if the variable is not a string (i.e., undefined)
-    return 'Error: Choices unavailable.'; 
+    
+    // This reliably pulls the data from the source array
+    return all_stimuli[index][key];
 }
+
 
 const mooney_trial_template = {
     timeline: [
@@ -75,13 +85,14 @@ const mooney_trial_template = {
             }
         },
         
-        // C. CATEGORY RESPONSE (5 seconds max) - FINAL ROBUST FIX
+        // C. CATEGORY RESPONSE (5 seconds max) - NEW FIX
         {
             type: jsPsychHtmlKeyboardResponse,
-            // *** FINAL FIX: Use a custom function in the stimulus parameter ***
-            stimulus: function() {
-                const choices = jsPsych.timelineVariable('category_choices');
-                const formatted_choices = formatChoices(choices);
+            // Access variable directly from the helper function
+            stimulus: function(){
+                const choices = getStimulusData('category_choices');
+                const formatted_choices = choices.replace(/\n/g, '<br>');
+                
                 return `
                     <p style="font-size: 24px;">Choose the correct category (Press 1-5):</p>
                     <div class="stimulus-text-container">${formatted_choices}</div>
@@ -98,13 +109,14 @@ const mooney_trial_template = {
             }
         },
         
-        // D. OBJECT RESPONSE (5 seconds max) - FINAL ROBUST FIX
+        // D. OBJECT RESPONSE (5 seconds max) - NEW FIX
         {
             type: jsPsychHtmlKeyboardResponse,
-            // *** FINAL FIX: Use a custom function in the stimulus parameter ***
-            stimulus: function() {
-                const choices = jsPsych.timelineVariable('object_choices');
-                const formatted_choices = formatChoices(choices);
+            // Access variable directly from the helper function
+            stimulus: function(){
+                const choices = getStimulusData('object_choices');
+                const formatted_choices = choices.replace(/\n/g, '<br>');
+                
                 return `
                     <p style="font-size: 24px;">Choose the exact object (Press 1-5):</p>
                     <div class="stimulus-text-container">${formatted_choices}</div>
