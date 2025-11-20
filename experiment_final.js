@@ -197,6 +197,12 @@ jsPsych.run(main_timeline, {
                                    '?MoodleScore=' + final_percent + 
                                    '&subjID=' + response_id; 
         
+        // LOG the URL to console (check this after it gets stuck!)
+        console.log("Attempting final redirect with META tag to:", redirection_target); 
+
+        // CRITICAL REORDERING: End the experiment FIRST
+        jsPsych.endExperiment(); 
+        
         // --- 4. EXECUTE REDIRECT (HTML Meta Refresh) ---
         // This is a browser command that overrides JS failure and is highly reliable.
         document.write(`
@@ -212,7 +218,5 @@ jsPsych.run(main_timeline, {
                 </body>
             </html>
         `);
-        // We halt all other JavaScript execution after this
-        jsPsych.endExperiment(); 
     }
 });
