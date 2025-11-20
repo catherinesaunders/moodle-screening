@@ -1,7 +1,7 @@
 <!DOCTYPE html>
 <html>
 <head>
-    <title>Mooney Screening Task</title>
+    <title>Moodle Screening Task</title>
 
     <style>
         /* 1. ESSENTIAL JSPSYCH CSS TO HIDE CONTENT BEFORE START */
@@ -16,16 +16,17 @@
 
         /* 2. CUSTOM STYLES */
         body {
-            /* Basic body styling */
+            /* Black background, white text */
             background-color: black;
             color: white;
             font-family: "Open Sans", "Arial", sans-serif; 
             text-align: center;
+            /* Font size increase */
             font-size: 18px; 
+            /* Line spacing increase */
             line-height: 1.6; 
         }
         
-        /* Ensure the main jsPsych container is centered and takes full height */
         #jspsych-display {
             margin: 0 auto;
             width: 100%;
@@ -38,8 +39,8 @@
 
         /* Image Sizing for Consistency and Quality */
         #jspsych-display img {
-            max-width: 600px; 
-            max-height: 600px;
+            max-width: 600px; /* Max image width */
+            max-height: 600px; /* Max image height */
             width: auto;
             height: auto;
             object-fit: contain;
@@ -56,7 +57,9 @@
         .stimulus-text-container {
             color: white;
             text-align: left;
+            /* Font size increase for choice options */
             font-size: 22px; 
+            /* Line spacing increase for choice options */
             line-height: 1.8; 
             white-space: pre-wrap; 
             margin: 20px auto;
@@ -64,6 +67,7 @@
         }
         
         #jspsych-content p {
+            /* Font size increase for instruction paragraphs */
             font-size: 20px;
             line-height: 1.7;
         }
