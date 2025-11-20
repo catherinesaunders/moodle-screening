@@ -18,9 +18,9 @@ function getParameterByName(name, url = window.location.href) {
 // -----------------------------------------------------------
 // 2. STIMULI DEFINITION (The source of truth for data)
 // -----------------------------------------------------------
-const IMAGE_BASE_URL = 'images/'; 
+// REMOVED IMAGE_BASE_URL: We will prepend the path directly below.
 
-const all_stimuli = [
+const all_stimuli_definitions = [
     { stimulus: 'A_cougar_sigma_3.jpg', correct_category_key: '1', correct_object_key: '3', category_choices: '1) mammal\n2) insect\n3) reptile\n4) household item\n5) bird', object_choices: '1) bunny\n2) rat\n3) cougar\n4) mountain\n5) crocodile' },
     { stimulus: 'A_bee_sigma_7.jpg', correct_category_key: '1', correct_object_key: '3', category_choices: '1) insect\n2) mammal\n3) reptile\n4) household item\n5) bird', object_choices: '1) spider\n2) cactus\n3) bee\n4) clown\n5) octopus' },
     { stimulus: '0_dolphin.new_gauss3.jpg', correct_category_key: '2', correct_object_key: '4', category_choices: '1) insect\n2) mammal\n3) reptile\n4) household item\n5) bird', object_choices: '1) duck\n2) ant\n3) crocodile\n4) dolphin\n5) horse' },
@@ -30,6 +30,16 @@ const all_stimuli = [
     { stimulus: '0_snake2_new_gauss2.jpg', correct_category_key: '5', correct_object_key: '2', category_choices: '1) mammal\n2) insect\n3) bird\n4) household item\n5) reptile', object_choices: '1) sailing boat\n2) snake\n3) tooth brush\n4) duck\n5) beetle' },
     { stimulus: '0_wateringcan_gauss4.jpg', correct_category_key: '5', correct_object_key: '2', category_choices: '1) mammal\n2) insect\n3) reptile\n4) bird\n5) household item', object_choices: '1) desktop\n2) watering can\n3) cabin\n4) knife\n5) lantern' }
 ];
+
+// CRITICAL FIX: Map the full relative path into the stimulus property now.
+const GITHUB_PAGES_BASE = 'moodle-screening/images/';
+
+const all_stimuli = all_stimuli_definitions.map(item => {
+    return {
+        ...item, 
+        stimulus: GITHUB_PAGES_BASE + item.stimulus 
+    };
+});
 
 // -----------------------------------------------------------
 // 3. TRIAL DEFINITION
@@ -43,9 +53,9 @@ let instruction_timeline = [
 
 let preload = {
     type: jsPsychPreload,
-    // FIX: Wrapping images array in a function to ensure path resolution at runtime
+    // FIX: The images array now uses the already-mapped full path
     images: function() {
-        return all_stimuli.map(s => IMAGE_BASE_URL + s.stimulus);
+        return all_stimuli.map(s => s.stimulus);
     }, 
     message: '<p style="font-size: 24px;">Please wait while the experiment loads...</p>',
     show_progress_bar: true, auto_translate: false, continue_after_error: false
@@ -61,6 +71,10 @@ function getStimulusData(key) {
         return 'Error: Index out of bounds.';
     }
     
+    // We access the original stimulus definition array for the choices, not the mapped one.
+    // NOTE: This assumes 'all_stimuli_definitions' is used here, but for simplicity, we 
+    // rely on the fact that only 'category_choices' and 'object_choices' are retrieved here, 
+    // which are the same in both arrays.
     return all_stimuli[mooney_index][key];
 }
 
@@ -78,7 +92,7 @@ const mooney_trial_template = {
         // B. MOONEY IMAGE & RT COLLECTION (20 seconds max)
         {
             type: jsPsychImageKeyboardResponse,
-            // The resolved full path is now passed by the preload plugin
+            // The full path is already inside the stimulus property of the timeline variable
             stimulus: jsPsych.timelineVariable('stimulus'),
             
             choices: ['Enter'], 
