@@ -49,15 +49,18 @@ let preload = {
 
 // **Helper function to retrieve data directly from the original stimulus array**
 function getStimulusData(key) {
-    // This finds the index of the main timeline node (the block of 4 trials)
-    const node_id = jsPsych.get-current-timeline-node().timeline_id;
-    // The current trial index within the main timeline node (0 to 7)
-    const index = jsPsych.get-current-timeline-node().iteration; 
+    // FIX: Corrected typo from get-current-timeline-node to getCurrentTimelineNode
+    const node = jsPsych.getCurrentTimelineNode();
     
-    // Safety check just in case the node is wrong (should be removed once confirmed working)
+    // The current trial index within the main timeline node (0 to 7)
+    // FIX: Corrected typo from .get-current-timeline-node() to getCurrentTimelineNode()
+    const index = node.iteration; 
+    
+    // Safety check just in case the node is wrong 
     if (index === undefined) {
         // Fallback for unexpected jsPsych structure
         const timeline = jsPsych.data.get().select('task_part').values;
+        // This index logic depends on the number of non-test trials before the first test trial (3 trials)
         return all_stimuli[timeline.length - 3][key];
     }
     
@@ -90,13 +93,18 @@ const mooney_trial_template = {
             type: jsPsychHtmlKeyboardResponse,
             // Access variable directly from the helper function
             stimulus: function(){
-                const choices = getStimulusData('category_choices');
-                const formatted_choices = choices.replace(/\n/g, '<br>');
-                
-                return `
-                    <p style="font-size: 24px;">Choose the correct category (Press 1-5):</p>
-                    <div class="stimulus-text-container">${formatted_choices}</div>
-                `;
+                // Ensure retrieval is wrapped in a try/catch since this is the source of all recent errors
+                try {
+                    const choices = getStimulusData('category_choices');
+                    const formatted_choices = choices.replace(/\n/g, '<br>');
+                    
+                    return `
+                        <p style="font-size: 24px;">Choose the correct category (Press 1-5):</p>
+                        <div class="stimulus-text-container">${formatted_choices}</div>
+                    `;
+                } catch (e) {
+                    return '<p style="color: red;">Error: Failed to retrieve category choices.</p>';
+                }
             },
             
             choices: ['1', '2', '3', '4', '5'],
@@ -114,13 +122,17 @@ const mooney_trial_template = {
             type: jsPsychHtmlKeyboardResponse,
             // Access variable directly from the helper function
             stimulus: function(){
-                const choices = getStimulusData('object_choices');
-                const formatted_choices = choices.replace(/\n/g, '<br>');
-                
-                return `
-                    <p style="font-size: 24px;">Choose the exact object (Press 1-5):</p>
-                    <div class="stimulus-text-container">${formatted_choices}</div>
-                `;
+                 try {
+                    const choices = getStimulusData('object_choices');
+                    const formatted_choices = choices.replace(/\n/g, '<br>');
+                    
+                    return `
+                        <p style="font-size: 24px;">Choose the exact object (Press 1-5):</p>
+                        <div class="stimulus-text-container">${formatted_choices}</div>
+                    `;
+                } catch (e) {
+                    return '<p style="color: red;">Error: Failed to retrieve object choices.</p>';
+                }
             },
             choices: ['1', '2', '3', '4', '5'],
             trial_duration: 5000, 
