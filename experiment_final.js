@@ -18,7 +18,8 @@ function getParameterByName(name, url = window.location.href) {
 // -----------------------------------------------------------
 // 2. STIMULI DEFINITION (The source of truth for data)
 // -----------------------------------------------------------
-// REMOVED IMAGE_BASE_URL: We will prepend the path directly below.
+// FIX: Use the simple relative path 'images/' again
+const GITHUB_PAGES_BASE = 'images/'; 
 
 const all_stimuli_definitions = [
     { stimulus: 'A_cougar_sigma_3.jpg', correct_category_key: '1', correct_object_key: '3', category_choices: '1) mammal\n2) insect\n3) reptile\n4) household item\n5) bird', object_choices: '1) bunny\n2) rat\n3) cougar\n4) mountain\n5) crocodile' },
@@ -31,9 +32,7 @@ const all_stimuli_definitions = [
     { stimulus: '0_wateringcan_gauss4.jpg', correct_category_key: '5', correct_object_key: '2', category_choices: '1) mammal\n2) insect\n3) reptile\n4) bird\n5) household item', object_choices: '1) desktop\n2) watering can\n3) cabin\n4) knife\n5) lantern' }
 ];
 
-// CRITICAL FIX: Map the full path into the stimulus property now, using the absolute root path.
-const GITHUB_PAGES_BASE = '/images/'; 
-
+// Map the full relative path into the stimulus property now.
 const all_stimuli = all_stimuli_definitions.map(item => {
     return {
         ...item, 
