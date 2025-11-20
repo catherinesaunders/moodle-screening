@@ -18,7 +18,6 @@ function getParameterByName(name, url = window.location.href) {
 // -----------------------------------------------------------
 // 2. STIMULI DEFINITION (The source of truth for data)
 // -----------------------------------------------------------
-// Fix: Using 'images/' for standard relative path resolution
 const IMAGE_BASE_URL = 'images/'; 
 
 const all_stimuli = [
@@ -44,14 +43,16 @@ let instruction_timeline = [
 
 let preload = {
     type: jsPsychPreload,
-    images: all_stimuli.map(s => IMAGE_BASE_URL + s.stimulus), 
+    // FIX: Wrapping images array in a function to ensure path resolution at runtime
+    images: function() {
+        return all_stimuli.map(s => IMAGE_BASE_URL + s.stimulus);
+    }, 
     message: '<p style="font-size: 24px;">Please wait while the experiment loads...</p>',
     show_progress_bar: true, auto_translate: false, continue_after_error: false
 };
 
 // **Helper function to retrieve data directly from the original stimulus array**
 function getStimulusData(key) {
-    // Fix: Changed - 3 to - 4 to account for all introductory trials (Preload + 3 instructions)
     const finished_trials = jsPsych.data.get().count();
     const mooney_index = finished_trials - 4; 
 
@@ -77,7 +78,7 @@ const mooney_trial_template = {
         // B. MOONEY IMAGE & RT COLLECTION (20 seconds max)
         {
             type: jsPsychImageKeyboardResponse,
-            // Fix: Revert to the simplest variable access. Preload resolves the path.
+            // The resolved full path is now passed by the preload plugin
             stimulus: jsPsych.timelineVariable('stimulus'),
             
             choices: ['Enter'], 
@@ -163,7 +164,6 @@ main_timeline = main_timeline.concat(instruction_timeline);
 main_timeline.push(mooney_trial_template);
 
 jsPsych.run(main_timeline, {
-    // Fix: Moved onFinish logic here for stability
     on_finish: function() {
         const final_percent = (current_score / total_trials).toFixed(3); 
         
