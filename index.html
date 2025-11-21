@@ -13,27 +13,30 @@
     
     <!-- Core Styling for a dark, full-screen experiment -->
     <style>
-        /* Ensures the entire page (body) uses a black background */
+        /* Ensures the entire page (body) uses a black background and sets up full screen centering */
         body {
             background-color: black;
-            color: white; /* Default text color is white for visibility */
+            color: white; 
             font-family: Arial, sans-serif;
             margin: 0;
             padding: 0;
-            overflow: hidden; /* Prevent scrolling */
+            overflow: hidden; 
             display: flex;
             justify-content: center;
             align-items: center;
             min-height: 100vh;
+            width: 100vw; /* Ensure body takes full width */
         }
 
-        /* The main jsPsych display container */
+        /* MODIFICATION: This container now takes up the entire viewport, 
+           allowing content (which is centrally aligned by the body CSS) 
+           to display within the full black canvas.
+        */
         #jspsych-display {
-            /* Ensures the display container takes up most of the screen */
-            width: 90vw;
-            max-width: 1000px;
+            width: 100vw; /* Full width */
+            height: 100vh; /* Full height */
             text-align: center;
-            padding: 20px;
+            padding: 0; 
         }
 
         /* Styling for specific elements within the experiment */
@@ -43,12 +46,19 @@
             text-align: center;
             margin: 0;
             padding: 0;
+            /* Ensures the wrapper uses the full display area */
+            width: 100%; 
+            height: 100%;
+            display: flex;
+            justify-content: center;
+            align-items: center;
         }
 
-        /* Styling for the preload message to be visible */
+        /* Content block for instructions/choices */
         .jspsych-content {
             color: white;
             font-size: 1.2em;
+            max-width: 800px; /* Keep content readable */
         }
 
         /* Force black background for the stimulus image page if needed */
@@ -74,7 +84,7 @@
             padding: 15px;
             background-color: #111;
             display: inline-block;
-            white-space: pre-wrap; /* Allows wrapping for long lines */
+            white-space: pre-wrap;
         }
     </style>
 </head>
