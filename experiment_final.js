@@ -9,8 +9,9 @@ const jsPsych = initJsPsych({
     default_iti: 1, 
 }); 
 
-// IMPORTANT: This assumes your images are in a folder named 'images/'
+// 🎯 CRITICAL PATH CHECK: Ensure this matches the folder name exactly!
 const GITHUB_PAGES_BASE = 'images/'; 
+
 const total_trials = 8;
 const cutoff_score = 0.4; // 40%
 
@@ -31,7 +32,6 @@ function getParameterByName(name, url = window.location.href) {
 // 2. STIMULI DEFINITIONS (REQUIRED FOR TASK)
 // -----------------------------------------------------------
 
-// This array defines the stimulus file, correct answers, and choice options for all 8 trials.
 const all_stimuli_definitions = [
     { stimulus: 'A_cougar_sigma_3.jpg', correct_category_key: '1', correct_object_key: '3', category_choices: '1) mammal\n2) insect\n3) reptile\n4) household item\n5) bird', object_choices: '1) bunny\n2) rat\n3) cougar\n4) mountain\n5) crocodile' },
     { stimulus: 'A_bee_sigma_7.jpg', correct_category_key: '1', correct_object_key: '3', category_choices: '1) insect\n2) mammal\n3) reptile\n4) household item\n5) bird', object_choices: '1) spider\n2) cactus\n3) bee\n4) clown\n5) octopus' },
@@ -54,9 +54,9 @@ const all_stimuli = all_stimuli_definitions.map(item => {
 
 // 3.1 Fixation Cross
 const fixation = {
-    // FIX: Changed from string to global plugin variable
     type: jsPsychHtmlKeyboardResponse,
-    stimulus: '<div style="font-size:60px;">+</div>',
+    // Increased size to 80px
+    stimulus: '<div style="font-size:80px; color: white;">+</div>', // Ensure fixation is white
     choices: "NO_KEYS",
     trial_duration: 500,
     data: { task_part: 'fixation' }
@@ -64,15 +64,16 @@ const fixation = {
 
 // 3.2 Image Presentation and Identification
 const mooney_image_template = {
-    // FIX: Changed from string to global plugin variable
     type: jsPsychImageKeyboardResponse,
     stimulus: jsPsych.timelineVariable('stimulus'),
     choices: ['Enter'], // Press Enter when identified
     render_on_canvas: false,
-    stimulus_height: 300,
-    stimulus_width: 300,
+    // --- SIGNIFICANTLY INCREASED IMAGE SIZE ---
+    stimulus_height: 650, 
+    stimulus_width: 650,  
+    // ------------------------------------------
     trial_duration: 20000, // Max 20 seconds
-    prompt: '<p>Press <strong>Enter</strong> the moment you identify the object.</p>',
+    prompt: '<p style="color: white;">Press <strong>Enter</strong> the moment you identify the object.</p>', // Ensure prompt is white
     data: { 
         task_part: 'Image_Recognition',
         correct_category_key: jsPsych.timelineVariable('correct_category_key'),
@@ -86,11 +87,10 @@ const mooney_image_template = {
 
 // 3.3 Category Choice (Conditional on identification)
 const category_choice_template = {
-    // FIX: Changed from string to global plugin variable
     type: jsPsychHtmlKeyboardResponse,
     stimulus: function(){
         return `
-            <div style="text-align: left;">
+            <div style="text-align: left; color: white;">
                 <h2>Category Choice</h2>
                 <p>What category is the object from?</p>
                 <pre>${jsPsych.timelineVariable('category_choices')}</pre>
@@ -104,7 +104,6 @@ const category_choice_template = {
     on_finish: function(data) {
         data.correct = data.response === data.correct_A;
     },
-    // Only run this trial if the object was identified in the previous trial
     conditional_function: function() {
         const prev_data = jsPsych.data.get().last(1).values[0];
         return prev_data.object_identified;
@@ -113,11 +112,10 @@ const category_choice_template = {
 
 // 3.4 Object Choice (Conditional on identification)
 const object_choice_template = {
-    // FIX: Changed from string to global plugin variable
     type: jsPsychHtmlKeyboardResponse,
     stimulus: function(){
         return `
-            <div style="text-align: left;">
+            <div style="text-align: left; color: white;">
                 <h2>Object Choice</h2>
                 <p>Which object did you see?</p>
                 <pre>${jsPsych.timelineVariable('object_choices')}</pre>
@@ -129,10 +127,8 @@ const object_choice_template = {
     trial_duration: 5000, // 5 seconds to respond
     data: { task_part: 'Object_Choice', correct_B: jsPsych.timelineVariable('correct_object_key') },
     on_finish: function(data) {
-        // THIS is the score we care about: identifying the specific object.
         data.correct = data.response === data.correct_B;
     },
-    // Conditional function checks the 'Image_Recognition' trial (2 trials ago)
     conditional_function: function() {
         const image_trial_data = jsPsych.data.get().filter({task_part: 'Image_Recognition'}).last(1).values[0];
         return image_trial_data.object_identified;
@@ -153,27 +149,23 @@ const full_mooney_trial = {
 
 let instruction_timeline = [
     { 
-        // FIX: Changed from string to global plugin variable
         type: jsPsychHtmlKeyboardResponse, 
-        stimulus: `<h2>Object Recognition Task</h2><p><strong>Welcome.</strong></p><p>You will see black-and-white Mooney images. Try to identify the object.</p><p style="margin-top: 30px;">Press the <strong>SPACEBAR</strong> to continue.</p>`, choices: [' '] 
+        stimulus: `<h2 style="color: white;">Object Recognition Task</h2><p><strong>Welcome.</strong></p><p>You will see black-and-white Mooney images. Try to identify the object.</p><p style="margin-top: 30px;">Press the <strong>SPACEBAR</strong> to continue.</p>`, choices: [' '] 
     },
     { 
-        // FIX: Changed from string to global plugin variable
         type: jsPsychHtmlKeyboardResponse, 
-        stimulus: `<h2>Instructions</h2><p>Press <strong>Enter</strong> the moment you think you see the object (max 20s).</p><p>You will then have 5s for the category choice and 5s for the object choice.</p><p><strong>Use the number keys (1, 2, 3, 4, 5).</strong></p><p style="margin-top: 30px;">Press the <strong>SPACEBAR</strong> to continue.</p>`, choices: [' '] 
+        stimulus: `<h2 style="color: white;">Instructions</h2><p>Press <strong>Enter</strong> the moment you think you see the object (max 20s).</p><p>You will then have 5s for the category choice and 5s for the object choice.</p><p><strong>Use the number keys (1, 2, 3, 4, 5).</strong></p><p style="margin-top: 30px;">Press the <strong>SPACEBAR</strong> to continue.</p>`, choices: [' '] 
     },
     { 
-        // FIX: Changed from string to global plugin variable
         type: jsPsychHtmlKeyboardResponse, 
-        stimulus: `<h2>Screening Trials</h2><p>We will start with ${total_trials} screening trials. You need ${cutoff_score * 100}% correct (i.e., ${Math.ceil(total_trials * cutoff_score)} out of ${total_trials}) to proceed.</p><p style="margin-top: 30px;">Click <strong>Enter</strong> to start the task.</p>`, choices: ['Enter'] 
+        stimulus: `<h2 style="color: white;">Screening Trials</h2><p>We will start with ${total_trials} screening trials. You need ${cutoff_score * 100}% correct (i.e., ${Math.ceil(total_trials * cutoff_score)} out of ${total_trials}) to proceed.</p><p style="margin-top: 30px;">Click <strong>Enter</strong> to start the task.</p>`, choices: ['Enter'] 
     }
 ];
 
 let preload = {
-    // FIX: Changed from string to global plugin variable
     type: jsPsychPreload,
     images: function() { return all_stimuli.map(s => s.stimulus); }, 
-    message: '<p style="font-size: 24px;">Please wait while the experiment loads...</p>',
+    message: '<p style="font-size: 24px; color: white;">Please wait while the experiment loads...</p>',
     show_progress_bar: true, auto_translate: false, continue_after_error: false
 };
 
@@ -182,10 +174,9 @@ let preload = {
 // -----------------------------------------------------------
 
 const final_redirect_trial = {
-    // FIX: Changed from string to global plugin variable
     type: jsPsychHtmlKeyboardResponse,
     stimulus: `
-        <div style="font-size: 30px; color: black;">
+        <div style="font-size: 30px; color: white;">
             <p>Task Complete.</p>
             <p>Redirecting you back to Qualtrics to see your outcome...</p>
             <p style="font-size: 18px;">(Please do not close this window)</p>
