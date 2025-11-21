@@ -68,10 +68,10 @@ const mooney_image_template = {
     stimulus: jsPsych.timelineVariable('stimulus'),
     choices: ['Enter'], // Press Enter when identified
     render_on_canvas: false,
-    // --- SIGNIFICANTLY INCREASED IMAGE SIZE ---
-    stimulus_height: 650, 
-    stimulus_width: 650,  
-    // ------------------------------------------
+    // --- INCREASED IMAGE SIZE TO 800X800 ---
+    stimulus_height: 800, 
+    stimulus_width: 800,  
+    // ----------------------------------------
     // --- UPDATED DURATION: 20 SECONDS ---
     trial_duration: 20000, 
     // ------------------------------------
