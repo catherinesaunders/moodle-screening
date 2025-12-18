@@ -1,6 +1,3 @@
-// IMPORTANT: This script assumes that your index.html file loads the necessary
-// jsPsych plugins via CDN, which creates the following global variables:
-// jsPsychHtmlKeyboardResponse, jsPsychPreload, jsPsychImageKeyboardResponse
 // -----------------------------------------------------------
 // 1. INITIALIZATION & UTILITIES
 // -----------------------------------------------------------
@@ -9,7 +6,7 @@ const jsPsych = initJsPsych({
     default_iti: 1, 
 }); 
 
-// 🎯 CRITICAL PATH CHECK: Ensure this matches the folder name exactly!
+// 🎯 CRITICAL PATH CHECK: Ensure this matches your folder name!
 const GITHUB_PAGES_BASE = 'images/'; 
 
 const total_trials = 8;
@@ -17,7 +14,7 @@ const cutoff_score = 0.4; // 40%
 
 /**
  * Utility function to parse URL parameters.
- * Used to retrieve the Qualtrics participant ID and other embedded data.
+ * Used to retrieve the Qualtrics ResponseID passed as 'participant'
  */
 function getParameterByName(name, url = window.location.href) {
     name = name.replace(/[\[\]]/g, '\\$&');
@@ -29,7 +26,7 @@ function getParameterByName(name, url = window.location.href) {
 }
 
 // -----------------------------------------------------------
-// 2. STIMULI DEFINITIONS (REQUIRED FOR TASK)
+// 2. STIMULI DEFINITIONS
 // -----------------------------------------------------------
 
 const all_stimuli_definitions = [
@@ -43,51 +40,41 @@ const all_stimuli_definitions = [
     { stimulus: '0_wateringcan_gauss4.jpg', correct_category_key: '5', correct_object_key: '2', category_choices: '1) mammal\n2) insect\n3) reptile\n4) bird\n5) household item', object_choices: '1) desktop\n2) watering can\n3) cabin\n4) knife\n5) lantern' }
 ];
 
-// Map stimuli to full paths for jsPsych
 const all_stimuli = all_stimuli_definitions.map(item => {
     return { ...item, stimulus: GITHUB_PAGES_BASE + item.stimulus };
 });
 
 // -----------------------------------------------------------
-// 3. TRIAL TEMPLATE (CORE MOONEY TASK LOGIC)
+// 3. TRIAL TEMPLATES
 // -----------------------------------------------------------
 
-// 3.1 Fixation Cross
 const fixation = {
     type: jsPsychHtmlKeyboardResponse,
-    // Increased size to 80px
-    stimulus: '<div style="font-size:80px; color: white;">+</div>', // Ensure fixation is white
+    stimulus: '<div style="font-size:80px; color: white;">+</div>',
     choices: "NO_KEYS",
     trial_duration: 500,
     data: { task_part: 'fixation' }
 };
 
-// 3.2 Image Presentation and Identification
 const mooney_image_template = {
     type: jsPsychImageKeyboardResponse,
     stimulus: jsPsych.timelineVariable('stimulus'),
-    choices: ['Enter'], // Press Enter when identified
+    choices: ['Enter'],
     render_on_canvas: false,
-    // --- INCREASED IMAGE SIZE TO 800X800 ---
     stimulus_height: 800, 
     stimulus_width: 800,  
-    // ----------------------------------------
-    // --- UPDATED DURATION: 18 SECONDS ---
     trial_duration: 18000, 
-    // ------------------------------------
-    prompt: '<p style="color: white;">Press <strong>Enter</strong> the moment you identify the object.</p>', // Ensure prompt is white
+    prompt: '<p style="color: white;">Press <strong>Enter</strong> the moment you identify the object.</p>',
     data: { 
         task_part: 'Image_Recognition',
         correct_category_key: jsPsych.timelineVariable('correct_category_key'),
         correct_object_key: jsPsych.timelineVariable('correct_object_key')
     },
     on_finish: function(data) {
-        // Record if the object was identified (key was pressed)
         data.object_identified = (data.response !== null);
     }
 };
 
-// 3.3 Category Choice (Conditional on identification)
 const category_choice_template = {
     type: jsPsychHtmlKeyboardResponse,
     stimulus: function(){
@@ -101,7 +88,7 @@ const category_choice_template = {
         `;
     },
     choices: ['1', '2', '3', '4', '5'],
-    trial_duration: 10000, // 10 seconds to respond
+    trial_duration: 10000,
     data: { task_part: 'Category_Choice', correct_A: jsPsych.timelineVariable('correct_category_key') },
     on_finish: function(data) {
         data.correct = data.response === data.correct_A;
@@ -112,7 +99,6 @@ const category_choice_template = {
     }
 };
 
-// 3.4 Object Choice (Conditional on identification)
 const object_choice_template = {
     type: jsPsychHtmlKeyboardResponse,
     stimulus: function(){
@@ -126,7 +112,7 @@ const object_choice_template = {
         `;
     },
     choices: ['1', '2', '3', '4', '5'],
-    trial_duration: 10000, // 10 seconds to respond
+    trial_duration: 10000,
     data: { task_part: 'Object_Choice', correct_B: jsPsych.timelineVariable('correct_object_key') },
     on_finish: function(data) {
         data.correct = data.response === data.correct_B;
@@ -137,33 +123,31 @@ const object_choice_template = {
     }
 };
 
-// 3.5 Assemble the full trial timeline
 const full_mooney_trial = {
     timeline: [fixation, mooney_image_template, category_choice_template, object_choice_template],
     timeline_variables: all_stimuli,
     randomize_order: true
 };
 
-
 // -----------------------------------------------------------
-// 4. INSTRUCTIONS & PRELOAD TIMELINE ELEMENTS
+// 4. INSTRUCTIONS & PRELOAD
 // -----------------------------------------------------------
 
 let instruction_timeline = [
     { 
         type: jsPsychHtmlKeyboardResponse, 
         stimulus: `<h2 style="color: white;">Object Recognition Task</h2><p><strong>Welcome.</strong></p><p>You will see black-and-white Mooney images. Try to identify the object.</p><p style="margin-top: 30px;">Press the <strong>SPACEBAR</strong> to continue.</p>`, 
-        choices: [' '] // This ensures the screen waits for spacebar input
+        choices: [' ']
     },
     { 
         type: jsPsychHtmlKeyboardResponse, 
         stimulus: `<h2 style="color: white;">Instructions</h2><p>Press <strong>Enter</strong> the moment you think you see the object (max 18s).</p><p>You will then have 10s for the category choice and 10s for the object choice.</p><p><strong>Use the number keys (1, 2, 3, 4, 5).</strong></p><p style="margin-top: 30px;">Press the <strong>SPACEBAR</strong> to continue.</p>`, 
-        choices: [' '] // This ensures the screen waits for spacebar input
+        choices: [' ']
     },
     { 
         type: jsPsychHtmlKeyboardResponse, 
-        stimulus: `<h2 style="color: white;">Screening Trials</h2><p>We will start with ${total_trials} screening trials. You need ${cutoff_score * 100}% correct (i.e., ${Math.ceil(total_trials * cutoff_score)} out of ${total_trials}) to proceed.</p><p style="margin-top: 30px;">Click <strong>Enter</strong> to start the task.</p>`, 
-        choices: ['Enter'] // This ensures the screen waits for Enter input
+        stimulus: `<h2 style="color: white;">Screening Trials</h2><p>We will start with ${total_trials} screening trials. You need ${cutoff_score * 100}% correct to proceed.</p><p style="margin-top: 30px;">Click <strong>Enter</strong> to start the task.</p>`, 
+        choices: ['Enter']
     }
 ];
 
@@ -171,11 +155,11 @@ let preload = {
     type: jsPsychPreload,
     images: function() { return all_stimuli.map(s => s.stimulus); }, 
     message: '<p style="font-size: 24px; color: white;">Please wait while the experiment loads...</p>',
-    show_progress_bar: true, auto_translate: false, continue_after_error: false
+    show_progress_bar: true
 };
 
 // -----------------------------------------------------------
-// 5. REDIRECT TRIAL (FINAL AND CRUCIAL STEP)
+// 5. REDIRECT TRIAL (THE CRITICAL FIX)
 // -----------------------------------------------------------
 
 const final_redirect_trial = {
@@ -188,23 +172,25 @@ const final_redirect_trial = {
         </div>
     `,
     choices: "NO_KEYS",
-    trial_duration: 1500, // Display message briefly before executing redirect
+    trial_duration: 2000, 
     on_finish: function() {
-        // 1. Calculate Score: Filter for Object_Choice trials where the response was correct
+        // 1. Calculate Score
         const total_correct = jsPsych.data.get().filter({task_part: 'Object_Choice', correct: true}).count();
         const final_percent = (total_correct / total_trials).toFixed(3); 
         
-        // 2. Get ID
+        // 2. Get the ResponseID from the URL
         let response_id = getParameterByName('participant'); 
         if (!response_id) { response_id = 'NO_ID'; }
         
-        // 3. Construct and Execute Redirect
+        // 3. Construct and Execute Redirect using Retake Link Syntax
         const base_url = 'https://duke.qualtrics.com/jfe/form/SV_3CRfinpvLk65sBU'; 
         
-        // *** KEY FIX: Adding MoodleScore, subjID, AND the critical SKIP_FLAG=1 ***
-        const target = `${base_url}?MoodleScore=${final_percent}&subjID=${encodeURIComponent(response_id)}&SKIP_FLAG=1`;
+        // Q_R re-opens original session. Q_R_DEL=1 updates it. SKIP_FLAG=1 tells your flow to skip to the end.
+        const target = `${base_url}?Q_R=${encodeURIComponent(response_id)}&Q_R_DEL=1&MoodleScore=${final_percent}&subjID=${encodeURIComponent(response_id)}&SKIP_FLAG=1`;
         
-        console.log("Redirecting to:", target);
+        console.log("Redirecting back to original session:", target);
+        
+        // USE REPLACE TO STAY IN THE SAME TAB
         window.location.replace(target);
     }
 };
@@ -216,9 +202,7 @@ const final_redirect_trial = {
 let main_timeline = [];
 main_timeline.push(preload); 
 main_timeline = main_timeline.concat(instruction_timeline);
-// Add the full set of trials here
 main_timeline.push(full_mooney_trial); 
-// Add the final redirect
 main_timeline.push(final_redirect_trial); 
 
 jsPsych.run(main_timeline);
